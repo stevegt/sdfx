@@ -24,7 +24,7 @@ func RenderSTL(
 	s SDF3, //sdf3 to render
 	meshCells int, //number of cells on the longest axis. e.g 200
 	path string, //path to filename
-) {
+) error {
 
 	// work out the sampling resolution to use
 	bbSize := s.BoundingBox().Size()
@@ -37,8 +37,7 @@ func RenderSTL(
 	var wg sync.WaitGroup
 	output, err := WriteSTL(&wg, path)
 	if err != nil {
-		fmt.Printf("%s", err)
-		return
+		return err
 	}
 
 	// run marching cubes to generate the triangle mesh
@@ -48,6 +47,7 @@ func RenderSTL(
 	close(output)
 	// wait for the file write to complete
 	wg.Wait()
+	return nil
 }
 
 // RenderSTLSlow renders an SDF3 as an STL file (uses uniform grid sampling).
@@ -55,7 +55,7 @@ func RenderSTLSlow(
 	s SDF3, //sdf3 to render
 	meshCells int, //number of cells on the longest axis. e.g 200
 	path string, //path to filename
-) {
+) error {
 	// work out the region we will sample
 	bb0 := s.BoundingBox()
 	bb0Size := bb0.Size()
@@ -72,8 +72,9 @@ func RenderSTLSlow(
 	m := marchingCubes(s, bb, meshInc)
 	err := SaveSTL(path, m)
 	if err != nil {
-		fmt.Printf("%s", err)
+		return err
 	}
+	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -83,7 +84,7 @@ func RenderDXF(
 	s SDF2, //sdf2 to render
 	meshCells int, //number of cells on the longest axis. e.g 200
 	path string, //path to filename
-) {
+) error {
 
 	// work out the sampling resolution to use
 	bbSize := s.BoundingBox().Size()
@@ -96,8 +97,7 @@ func RenderDXF(
 	var wg sync.WaitGroup
 	output, err := WriteDXF(&wg, path)
 	if err != nil {
-		fmt.Printf("%s", err)
-		return
+		return err
 	}
 
 	// run marching squares to generate the line segments
@@ -107,6 +107,7 @@ func RenderDXF(
 	close(output)
 	// wait for the file write to complete
 	wg.Wait()
+	return nil
 }
 
 // RenderDXFSlow renders an SDF2 as a DXF file. (uses uniform grid sampling)
@@ -114,7 +115,7 @@ func RenderDXFSlow(
 	s SDF2, //sdf2 to render
 	meshCells int, //number of cells on the longest axis. e.g 200
 	path string, //path to filename
-) {
+) error {
 	// work out the region we will sample
 	bb0 := s.BoundingBox()
 	bb0Size := bb0.Size()
@@ -131,8 +132,9 @@ func RenderDXFSlow(
 	m := marchingSquares(s, bb, meshInc)
 	err := SaveDXF(path, m)
 	if err != nil {
-		fmt.Printf("%s", err)
+		return err
 	}
+	return nil
 }
 
 //-----------------------------------------------------------------------------
