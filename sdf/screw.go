@@ -22,6 +22,7 @@ package sdf
 
 import (
 	"fmt"
+	"log"
 	"math"
 )
 
@@ -48,6 +49,9 @@ func (m threadDatabase) UTSAdd(
 	tpi float64, // threads per inch
 	ftof float64, // hex head flat to flat distance
 ) {
+	if ftof <= 0 {
+		log.Panicf("bad flat to flat distance for thread \"%s\"", name)
+	}
 	t := ThreadParameters{}
 	t.Name = name
 	t.Radius = diameter / 2.0
@@ -64,6 +68,9 @@ func (m threadDatabase) ISOAdd(
 	pitch float64, // thread pitch
 	ftof float64, // hex head flat to flat distance
 ) {
+	if ftof <= 0 {
+		log.Panicf("bad flat to flat distance for thread \"%s\"", name)
+	}
 	t := ThreadParameters{}
 	t.Name = name
 	t.Radius = diameter / 2.0
@@ -99,8 +106,8 @@ func initThreadLookup() threadDatabase {
 	m.UTSAdd("unf_7/8", 7.0/8.0, 14, 21.0/16.0)
 	m.UTSAdd("unf_1", 1.0, 12, 3.0/2.0)
 	// ISO Coarse
-	m.ISOAdd("M1x0.25", 1, 0.25, -1)
-	m.ISOAdd("M1.2x0.25", 1.2, 0.25, -1)
+	m.ISOAdd("M1x0.25", 1, 0.25, 1.75)    // ftof?
+	m.ISOAdd("M1.2x0.25", 1.2, 0.25, 2.0) // ftof?
 	m.ISOAdd("M1.6x0.35", 1.6, 0.35, 3.2)
 	m.ISOAdd("M2x0.4", 2, 0.4, 4)
 	m.ISOAdd("M2.5x0.45", 2.5, 0.45, 5)
@@ -121,8 +128,8 @@ func initThreadLookup() threadDatabase {
 	m.ISOAdd("M56x5.5", 56, 5.5, 85)
 	m.ISOAdd("M64x6", 64, 6, 95)
 	// ISO Fine
-	m.ISOAdd("M1x0.2", 1, 0.2, -1)
-	m.ISOAdd("M1.2x0.2", 1.2, 0.2, -1)
+	m.ISOAdd("M1x0.2", 1, 0.2, 1.75)    // ftof?
+	m.ISOAdd("M1.2x0.2", 1.2, 0.2, 2.0) // ftof?
 	m.ISOAdd("M1.6x0.2", 1.6, 0.2, 3.2)
 	m.ISOAdd("M2x0.25", 2, 0.25, 4)
 	m.ISOAdd("M2.5x0.35", 2.5, 0.35, 5)
@@ -155,9 +162,6 @@ func ThreadLookup(name string) (*ThreadParameters, error) {
 
 // HexRadius returns the hex head radius.
 func (t *ThreadParameters) HexRadius() float64 {
-	if t.HexFlat2Flat < 0 {
-		panic("no hex head flat to flat distance defined for this thread")
-	}
 	return t.HexFlat2Flat / (2.0 * math.Cos(DtoR(30)))
 }
 
@@ -201,7 +205,7 @@ func AcmeThread(
 func ISOThread(
 	radius float64, // radius of thread
 	pitch float64, // thread to thread distance
-	mode string, // internal/external thread
+	external bool, // external (or internal) thread
 ) SDF2 {
 
 	theta := DtoR(30.0)
@@ -210,7 +214,7 @@ func ISOThread(
 	r0 := rMajor - (7.0/8.0)*h
 
 	iso := NewPolygon()
-	if mode == "external" {
+	if external {
 		rRoot := (pitch / 8.0) / math.Cos(theta)
 		xOfs := (1.0 / 16.0) * pitch
 		iso.Add(pitch, 0)
@@ -221,7 +225,7 @@ func ISOThread(
 		iso.Add(-pitch/2.0, r0).Smooth(rRoot, 5)
 		iso.Add(-pitch, r0+h)
 		iso.Add(-pitch, 0)
-	} else if mode == "internal" {
+	} else {
 		rMinor := r0 + (1.0/4.0)*h
 		rCrest := (pitch / 16.0) / math.Cos(theta)
 		xOfs := (1.0 / 8.0) * pitch
@@ -232,8 +236,6 @@ func ISOThread(
 		iso.Add(-pitch/2+xOfs, rMinor)
 		iso.Add(-pitch, rMinor)
 		iso.Add(-pitch, 0)
-	} else {
-		panic("bad mode")
 	}
 	//iso.Render("iso.dxf")
 	return Polygon2D(iso.Vertices())
