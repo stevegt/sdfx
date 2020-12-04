@@ -42,6 +42,7 @@ type evalReq struct {
 
 var evalProcessCh = make(chan evalReq, 100)
 
+// TODO do we still need a worker pool in modern versions of go?
 func init() {
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {

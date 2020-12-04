@@ -117,6 +117,8 @@ func WriteSTL(wg *sync.WaitGroup, path string) (chan<- *Triangle3, error) {
 			d.Vertex3[1] = float32(t.V[2].Y)
 			d.Vertex3[2] = float32(t.V[2].Z)
 			if err := binary.Write(buf, binary.LittleEndian, &d); err != nil {
+				// TODO this error can't be handled without another channel or other data path
+				// TODO WriteSTL should probably not be a goroutine but marchingcubes should
 				fmt.Printf("%s\n", err)
 				return
 			}

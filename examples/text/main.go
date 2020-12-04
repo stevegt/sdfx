@@ -23,7 +23,7 @@ func main() {
 	//f, err := sdf.LoadFont("wt064.ttf")
 
 	if err != nil {
-		log.Fatalf("can't read font file %s\n", err)
+		log.Fatalf("can't read font file %s", err)
 	}
 
 	t := sdf.NewText("SDFX!\nHello,\nWorld!")
@@ -31,7 +31,7 @@ func main() {
 
 	s2d, err := sdf.TextSDF2(f, t, 10.0)
 	if err != nil {
-		log.Fatalf("can't generate text sdf2 %s\n", err)
+		log.Fatalf("can't generate text sdf2 %s", err)
 	}
 
 	sdf.RenderDXF(s2d, 600, "shape.dxf")
